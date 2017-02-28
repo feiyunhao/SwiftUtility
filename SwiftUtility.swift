@@ -127,6 +127,7 @@ func imageOfSize(_ size:CGSize, opaque:Bool = false, closure: () -> ()) -> UIIma
 }
 
 
+
 //Finite Repetition of an Animation
 
 extension UIView {
@@ -161,6 +162,7 @@ extension UIView {
     }
 }
 
+
 //Remove Multiple Indexes From Array
 
 extension Array {
@@ -171,12 +173,79 @@ extension Array {
     }
 }
 
+
 //Configure a Value Class at Point of Use
 
 func lend<T> (_ closure: (T)->()) -> T where T: NSObject {
     let orig = T()
     closure(orig)
     return orig
+}
+
+
+
+//Sequence & Collection
+
+extension Sequence {
+    func findElement (match: (Iterator.Element) -> Bool) -> Iterator.Element? {
+        for element in self where match(element) {
+            return element
+        }
+        return nil
+    }
+}
+
+extension Array {
+    func accumulate<U>(_ initial: U, combine: (U, Element) -> U) -> [U] {
+        var running = initial
+        return self.map { next in
+            running = combine(running, next)
+            return running
+        }
+    }
+}
+
+extension Sequence {
+    func allMatch(predicate: (Iterator.Element) -> Bool) -> Bool {
+        return !self.contains { !predicate($0) }
+    }
+}
+
+extension Dictionary {
+    mutating func merge<S: Sequence>(_ other: S) where S.Iterator.Element == (Key,Value) {
+        for (k, v) in other {
+            self[k] = v
+        }
+    }
+}
+
+extension Dictionary {
+    init<S: Sequence>(_ sequence: S) where S.Iterator.Element == (Key,Value){
+        self = [:]
+        self.merge(sequence)
+    }
+}
+
+extension Dictionary {
+    func mapValues<NewValue>(transform: (Value) -> NewValue) -> [Key:NewValue] {
+        return Dictionary<Key, NewValue>(map { (key, value) in
+            return (key, transform(value))
+        })
+    }
+}
+
+extension Sequence where Iterator.Element: Hashable {
+    func unique() -> [Iterator.Element] {
+        var seen: Set<Iterator.Element> = []
+        return filter {
+            if seen.contains($0) {
+                return false
+            } else {
+                seen.insert($0)
+                return true
+            }
+        }
+    }
 }
 
 
