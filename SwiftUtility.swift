@@ -62,6 +62,33 @@ func delay(_ delay:Double, closure: @escaping ()->()) {
 }
 
 
+//DispatchQueue Once
+
+public extension DispatchQueue {
+    
+    private static var _onceTracker: Set<String> = []
+    
+    public class func once(file: String = #file, function: String = #function, line: Int = #line, block:(Void)->Void) {
+        let token = file + ":" + function + ":" + String(line)
+        once(token: token, block: block)
+    }
+    
+    public class func once(token: String, block:(Void)->Void) {
+        objc_sync_enter(self)
+        
+        defer { objc_sync_exit(self) }
+        
+        if _onceTracker.contains(token) {
+            return
+        }
+        
+        _onceTracker.insert(token)
+        
+        block()
+    }
+}
+
+
 //Dictionary of Views
 //Equivalent of Objective-C’s NSDictionaryOfVariableBindings
 
